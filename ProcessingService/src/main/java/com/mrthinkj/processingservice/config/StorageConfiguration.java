@@ -1,11 +1,13 @@
 package com.mrthinkj.processingservice.config;
 
 import io.minio.MinioClient;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@Data
 public class StorageConfiguration {
     @Value("${minio.access-key}")
     private String accessKey;

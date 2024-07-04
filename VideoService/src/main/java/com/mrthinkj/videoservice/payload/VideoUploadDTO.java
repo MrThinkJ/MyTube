@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @Builder
 public class VideoUploadDTO {
-    private String videoName;
     private Long posterId;
     private String title;
     private MultipartFile videoContent;

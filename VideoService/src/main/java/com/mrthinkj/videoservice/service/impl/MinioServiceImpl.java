@@ -4,6 +4,7 @@ import com.mrthinkj.videoservice.config.StorageConfiguration;
 import com.mrthinkj.videoservice.service.MinioService;
 import io.minio.*;
 import io.minio.messages.Item;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class MinioServiceImpl implements MinioService {
     MinioClient minioClient;
     StorageConfiguration storageConfiguration;
@@ -24,7 +26,7 @@ public class MinioServiceImpl implements MinioService {
         minioClient.putObject(PutObjectArgs
                 .builder()
                 .bucket(storageConfiguration.getBucketStore())
-                .object(fileName+".mp4")
+                .object(fileName)
                 .stream(stream, file.getSize(), -1)
                 .contentType(file.getContentType())
                 .build());

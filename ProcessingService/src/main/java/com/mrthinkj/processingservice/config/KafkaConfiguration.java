@@ -32,7 +32,7 @@ public class KafkaConfiguration {
     private String trustedPackage;
 
     @Bean
-    Map<String, Object> kafkaConfigs(){
+    ConsumerFactory<String, Object> consumerFactory(){
         Map<String, Object> configs = new HashMap<>();
         configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
         configs.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, isolationLevel);
@@ -41,12 +41,7 @@ public class KafkaConfiguration {
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         configs.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         configs.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackage);
-        return configs;
-    }
-
-    @Bean
-    ConsumerFactory<String, Object> consumerFactory(Map<String, Object> kafkaConfigs){
-        return new DefaultKafkaConsumerFactory<>(kafkaConfigs);
+        return new DefaultKafkaConsumerFactory<>(configs);
     }
 
     @Bean

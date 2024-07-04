@@ -35,11 +35,10 @@ public class VideoServiceImpl implements VideoService {
         String videoUUID = UUID.randomUUID().toString();
         String idempotencyKey = UUID.randomUUID().toString();
         MultipartFile videoContent = videoUploadDTO.getVideoContent();
-        minioService.putObject(videoContent, videoUUID);
+        minioService.putObject(videoContent, videoUUID+".mp4");
 
         // Save Video object to database
         Video video = new Video();
-        video.setVideoName(videoUploadDTO.getVideoName());
         video.setVideoUUID(videoUUID);
         video.setState(VideoState.PROCESS);
         video.setTitle(videoUploadDTO.getTitle());
@@ -70,7 +69,6 @@ public class VideoServiceImpl implements VideoService {
         // Return VideoDTO
         return VideoDTO.builder()
                 .videoUUID(videoUUID)
-                .videoName(videoUploadDTO.getVideoName())
                 .posterId(videoUploadDTO.getPosterId())
                 .publishDate(LocalDate.now())
                 .title(videoUploadDTO.getTitle())
