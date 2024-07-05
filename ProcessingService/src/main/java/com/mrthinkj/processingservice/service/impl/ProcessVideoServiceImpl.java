@@ -1,19 +1,25 @@
 package com.mrthinkj.processingservice.service.impl;
 
+import com.mrthinkj.core.entity.VideoState;
 import com.mrthinkj.processingservice.config.StorageConfiguration;
 import com.mrthinkj.processingservice.entity.ProcessedVideoEvent;
 import com.mrthinkj.processingservice.repository.ProcessedVideoEventRepository;
 import com.mrthinkj.processingservice.service.MinioService;
 import com.mrthinkj.processingservice.service.ProcessVideoService;
 import lombok.AllArgsConstructor;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -22,6 +28,7 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
     ProcessedVideoEventRepository processedVideoEventRepository;
     StorageConfiguration storageConfiguration;
     MinioService minioService;
+    KafkaTemplate<String, VideoState> kafkaTemplate;
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     @Override
     public boolean checkIfExistIdempotencyKey(String idempotencyKey) {
@@ -31,18 +38,18 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
 
     @Override
     public void processVideo(String videoUUID) throws Exception {
-        InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStore(), videoUUID);
+        InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStore(), videoUUID+"/"+videoUUID+".mp4");
         processVideoToHls(inputStream, videoUUID);
     }
 
-    private void processVideoToHls(InputStream inputStream, String folderName) throws IOException, InterruptedException {
+    private void processVideoToHls(InputStream inputStream, String videoUUID) throws Exception {
         File tempFile = File.createTempFile("temp", ".mp4");
         try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
             inputStream.transferTo(outputStream);
         }
         List<String> commands = mp4ToHlsCommand(tempFile.getAbsolutePath());
         String dataPath = "D:\\Study\\Project\\MyTube\\data";
-        String videoFolderPath = dataPath +"/"+folderName;
+        String videoFolderPath = dataPath +"/"+videoUUID;
         File videoFolder = new File(videoFolderPath);
         if (videoFolder.mkdir() || videoFolder.isDirectory()){
             Process process = new ProcessBuilder().command(commands).directory(videoFolder).start();
@@ -64,8 +71,25 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
                     .start();
             latch.await();
         }
-        uploadFolderToMinIO(videoFolderPath, folderName);
+        uploadFolderToMinIO(videoFolderPath, videoUUID);
+        sendToEventResultTopic(videoUUID);
         LOGGER.info("******** DONE ********");
+    }
+
+    private void sendToEventResultTopic(String videoUUID) throws Exception {
+        String eventId = UUID.randomUUID().toString();
+        ProducerRecord<String, VideoState> record = new ProducerRecord<>(
+                "video-result-events-topic",
+                eventId,
+                VideoState.SUCCESS
+        );
+        record.headers().add("videoUUID", videoUUID.getBytes());
+        SendResult<String, VideoState> result = kafkaTemplate.send(record).get();
+        LOGGER.info("Send message successfully to kafka broker");
+        LOGGER.info("Partition: "+result.getRecordMetadata().partition());
+        LOGGER.info("Topic: "+result.getRecordMetadata().topic());
+        LOGGER.info("Offset: "+result.getRecordMetadata().offset());
+        LOGGER.info("VideoUUID: {}, with State: {}", videoUUID, VideoState.SUCCESS);
     }
 
     private void uploadFolderToMinIO(String localFolderPath, String minioFolder){

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @Builder
 public class VideoDTO {
     private String videoUUID;
+    private String thumbnailUUID;
     private Long posterId;
     private String title;
     private LocalDate publishDate;

@@ -3,21 +3,30 @@ package com.mrthinkj.videoservice.service.impl;
 import com.mrthinkj.core.entity.VideoEvent;
 import com.mrthinkj.core.entity.VideoState;
 import com.mrthinkj.videoservice.config.StorageConfiguration;
+import com.mrthinkj.videoservice.config.StreamConfiguration;
 import com.mrthinkj.videoservice.entity.Video;
+import com.mrthinkj.videoservice.exception.DoesNotExistException;
+import com.mrthinkj.videoservice.exception.VideoStateNotSuccessException;
 import com.mrthinkj.videoservice.payload.VideoDTO;
 import com.mrthinkj.videoservice.payload.VideoUploadDTO;
 import com.mrthinkj.videoservice.repository.VideoRepository;
 import com.mrthinkj.videoservice.service.MinioService;
 import com.mrthinkj.videoservice.service.VideoService;
 import lombok.AllArgsConstructor;
+import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -27,6 +36,7 @@ public class VideoServiceImpl implements VideoService {
     KafkaTemplate<String, VideoEvent> kafkaTemplate;
     MinioService minioService;
     StorageConfiguration storageConfiguration;
+    StreamConfiguration streamConfiguration;
     VideoRepository videoRepository;
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     @Override
@@ -35,7 +45,9 @@ public class VideoServiceImpl implements VideoService {
         String videoUUID = UUID.randomUUID().toString();
         String idempotencyKey = UUID.randomUUID().toString();
         MultipartFile videoContent = videoUploadDTO.getVideoContent();
-        minioService.putObject(videoContent, videoUUID+".mp4");
+        MultipartFile videoThumbnail = videoUploadDTO.getThumbnail();
+        minioService.putObject(videoContent, videoUUID+"/"+videoUUID+".mp4");
+        minioService.putObject(videoThumbnail, videoUUID+"/"+videoUUID+"."+FileNameUtils.getExtension(videoThumbnail.getOriginalFilename()));
 
         // Save Video object to database
         Video video = new Video();
@@ -73,6 +85,62 @@ public class VideoServiceImpl implements VideoService {
                 .publishDate(LocalDate.now())
                 .title(videoUploadDTO.getTitle())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StreamingResponseBody getM3U8(String videoUUID) throws Exception {
+        Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
+                ()-> new DoesNotExistException("This video UUID does not exist"));
+        if (video.getState() != VideoState.SUCCESS)
+            throw new VideoStateNotSuccessException("This video is processing or process failed");
+
+        InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStream(), videoUUID+"/index.m3u8");
+        return outputStream -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream)); outputStream) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.endsWith(".ts")) {
+                        outputStream.write((streamConfiguration.getStreamPrefix()+videoUUID+"/"+line).getBytes());
+                        outputStream.write(System.lineSeparator().getBytes());
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error when read the m3u8 file");
+            }
+        };
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StreamingResponseBody getTs(String videoUUID, String tsFile) throws Exception {
+        Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
+                ()-> new DoesNotExistException("This video UUID does not exist"));
+        if (video.getState() != VideoState.SUCCESS)
+            throw new VideoStateNotSuccessException("This video is processing or process failed");
+
+        String tsFilePath = videoUUID+"/"+tsFile+".ts";
+        LOGGER.info(tsFilePath);
+        return outputStream -> {
+            try (InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStream(), tsFilePath); outputStream) {
+                byte[] buffer = new byte[2048];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.flush();
+            } catch (Exception e) {
+                LOGGER.error("Error when reading ts file");
+            }
+        };
+    }
+
+    @Override
+    public void setStateForVideo(String videoUUID, VideoState stateForVideo) {
+        Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
+                ()-> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
+        video.setState(stateForVideo);
+        videoRepository.save(video);
     }
 
     @Override

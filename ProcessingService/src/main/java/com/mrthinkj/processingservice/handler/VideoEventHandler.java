@@ -35,7 +35,7 @@ public class VideoEventHandler {
                 return;
             }
             LOGGER.info("Process video");
-            processVideoService.processVideo(videoEvent.getVideoId()+".mp4");
+            processVideoService.processVideo(videoEvent.getVideoId());
         } catch (JsonProcessingException e) {
             LOGGER.error("Error deserializing payload", e);
         } catch (Exception e) {

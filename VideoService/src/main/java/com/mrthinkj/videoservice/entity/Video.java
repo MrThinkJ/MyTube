@@ -18,6 +18,7 @@ public class Video {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String videoUUID;
+    private String thumbnailUUID;
     private Long posterId;
     private String title;
     private Integer viewCount;
