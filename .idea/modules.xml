@@ -4,8 +4,12 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Core/Core.iml" filepath="$PROJECT_DIR$/Core/Core.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/MyTube.iml" filepath="$PROJECT_DIR$/.idea/MyTube.iml" />
-      <module fileurl="file://$PROJECT_DIR$/ProcessingService/ProcessingService.iml" filepath="$PROJECT_DIR$/ProcessingService/ProcessingService.iml" />
-      <module fileurl="file://$PROJECT_DIR$/VideoService/VideoService.iml" filepath="$PROJECT_DIR$/VideoService/VideoService.iml" />
+      <module fileurl="file://$PROJECT_DIR$/api-gateway/api-gateway.iml" filepath="$PROJECT_DIR$/api-gateway/api-gateway.iml" />
+      <module fileurl="file://$PROJECT_DIR$/eureka-server/eureka-server.iml" filepath="$PROJECT_DIR$/eureka-server/eureka-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/security-service/security-service.iml" filepath="$PROJECT_DIR$/security-service/security-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/user-service/user-service.iml" filepath="$PROJECT_DIR$/user-service/user-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/video-processing-service/video-processing-service.iml" filepath="$PROJECT_DIR$/video-processing-service/video-processing-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/video-service/video-service.iml" filepath="$PROJECT_DIR$/video-service/video-service.iml" />
     </modules>
   </component>
 </project>
