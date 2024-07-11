@@ -64,6 +64,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Long getUserIdByUsername(String usernameOrEmail) {
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElse(null);
+        return user == null ? null : user.getId();
+    }
+
+    @Override
     public void deleteUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ResourceNotFoundException("User", "Id", userId.toString())

@@ -4,6 +4,8 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Core" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/api-gateway" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/comment-service" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/config-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/eureka-server" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/security-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/user-service" vcs="Git" />

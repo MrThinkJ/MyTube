@@ -10,5 +10,6 @@ public interface UserService {
     UserResponseDTO getUserById(Long userId);
     UserResponseDTO updateUserById(Long userId, UserDTO userDTO);
     Boolean isValidUserAccount(UserPayload userPayload);
+    Long getUserIdByUsername(String usernameOrEmail);
     void deleteUserById(Long userId);
 }

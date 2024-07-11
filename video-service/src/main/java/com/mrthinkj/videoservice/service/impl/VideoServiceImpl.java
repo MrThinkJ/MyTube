@@ -5,7 +5,7 @@ import com.mrthinkj.core.entity.VideoState;
 import com.mrthinkj.videoservice.config.StorageConfiguration;
 import com.mrthinkj.videoservice.config.StreamConfiguration;
 import com.mrthinkj.videoservice.entity.Video;
-import com.mrthinkj.videoservice.exception.DoesNotExistException;
+import com.mrthinkj.core.exception.DoesNotExistException;
 import com.mrthinkj.videoservice.exception.VideoStateNotSuccessException;
 import com.mrthinkj.videoservice.payload.VideoDTO;
 import com.mrthinkj.videoservice.payload.VideoUploadDTO;

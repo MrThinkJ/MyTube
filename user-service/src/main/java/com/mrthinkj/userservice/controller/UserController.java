@@ -21,6 +21,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @GetMapping("/username/{usernameOrEmail}")
+    public ResponseEntity<Long> getUserIdByUsername(@PathVariable String usernameOrEmail){
+        return ResponseEntity.ok(userService.getUserIdByUsername(usernameOrEmail));
+    }
+
     @PostMapping("/checkLogin")
     public ResponseEntity<Boolean> isValidUserAccount(@RequestBody UserPayload userPayload){
         return ResponseEntity.ok(userService.isValidUserAccount(userPayload));

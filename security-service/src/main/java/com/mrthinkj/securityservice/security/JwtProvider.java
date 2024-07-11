@@ -15,11 +15,9 @@ public class JwtProvider {
     private String secretKey;
     @Value("${jwt.expiration}")
     private long expiration;
-
     private Key key(){
         return Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
     }
-
     public String generateToken(String username){
         Date currentDate = new Date();
         Date expirationDate = new Date(currentDate.getTime()+expiration);

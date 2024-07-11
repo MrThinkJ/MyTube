@@ -73,6 +73,7 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
                 .start();
         latch.await();
         uploadFolderToMinIO(videoFile, videoUUID);
+        deleteFolderInLocal(tempFile, videoUUID);
         sendToEventResultTopic(videoUUID);
         LOGGER.info("******** DONE ********");
     }
@@ -104,6 +105,16 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
                     LOGGER.error("Error when convert from file to InputStream");
                 }
             }
+        }
+    }
+
+    private void deleteFolderInLocal(File temp, String videoUUID){
+        try{
+            temp.delete();
+            Path videoFolderPath = DATA_PATH.resolve(videoUUID);
+            Files.deleteIfExists(videoFolderPath);
+        } catch (Exception e){
+            LOGGER.error("Error when delete the temp file and the data: {}", e.getMessage());
         }
     }
 

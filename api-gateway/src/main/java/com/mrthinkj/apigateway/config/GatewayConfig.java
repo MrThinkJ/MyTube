@@ -25,6 +25,10 @@ public class GatewayConfig {
                         predicateSpec -> predicateSpec.path("/api/v1/auth/**")
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
                                 .uri("lb://security-service"))
+                .route("video-service",
+                        predicateSpec -> predicateSpec.path("/api/v1/videos/**")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
+                                .uri("lb://video-service"))
                 .build();
     }
 

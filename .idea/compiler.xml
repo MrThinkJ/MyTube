@@ -8,6 +8,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="video-processing-service" />
+        <module name="comment-service" />
+        <module name="config-service" />
         <module name="video-service" />
         <module name="security-service" />
         <module name="api-gateway" />
@@ -18,6 +20,8 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="api-gateway" target="17" />
+      <module name="comment-service" target="17" />
+      <module name="config-service" target="17" />
       <module name="Core" target="17" />
       <module name="eureka-server" target="17" />
       <module name="security-service" target="17" />
@@ -30,6 +34,8 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Core" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
+      <module name="comment-service" options="-parameters" />
+      <module name="config-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="security-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
