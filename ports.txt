@@ -1,6 +1,7 @@
 api-gateway=9191
 config-service=8888
 eureka-server=8761
+notification-service=8086
 comment-service=8085
 security-service=8084
 user-service=8083

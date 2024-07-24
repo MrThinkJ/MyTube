@@ -1,5 +1,6 @@
 package com.mrthinkj.commentservice.payload;
 
+import com.mrthinkj.commentservice.annotation.ExistVideo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 public class CommentUploadDTO {
+    @ExistVideo
     private Long videoId;
     private String content;
     private Long parentId;

@@ -10,6 +10,7 @@ import com.mrthinkj.core.exception.UnauthorizedException;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,8 +26,10 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class CommentServiceImpl implements CommentService{
+    private final Duration CACHE_TTL = Duration.ofMinutes(60);
     CommentRepository commentRepository;
     WebClient.Builder webClientBuilder;
+    CachingService cachingService;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     @Override
     public CommentDTO getCommentById(Long commentId) {
@@ -72,6 +75,37 @@ public class CommentServiceImpl implements CommentService{
         commentRepository.deleteById(commentId);
     }
 
+    private Long fetchUserIdByUsername(String username) {
+        String USERID_REDIS_PREFIX = "userId:";
+        String cacheKey = USERID_REDIS_PREFIX +username;
+        Object userIdObj = cachingService.getObjectFromKey(cacheKey);
+        if (userIdObj != null)
+            return (Long) userIdObj;
+        Long userId = fetchUserIdFromUserService(username);
+        cachingService.putObject(cacheKey, userId, CACHE_TTL);
+        return userId;
+    }
+
+    private Long fetchUserIdFromUserService(String username){
+        return webClientBuilder.build()
+                .get()
+                .uri("http://user-service/api/v1/users/username/" + username)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
+                    log.error("Client error: {}", clientResponse.statusCode());
+                    throw new RuntimeException("Error with client");
+                })
+                .bodyToMono(Long.class)
+                .timeout(Duration.ofSeconds(5))
+                .onErrorMap(TimeoutException.class, ex -> {
+                    throw new ServiceUnavailableException("User service unavailable");
+                })
+                .doOnError(ex ->{
+                    log.error("Exception throw: {}", ex.getMessage());
+                })
+                .block();
+    }
+
     private CommentDTO mapToDTO(Comment comment){
         return CommentDTO.builder()
                 .id(comment.getId())
@@ -98,25 +132,5 @@ public class CommentServiceImpl implements CommentService{
         comment.setDislikesCount(commentDTO.getDislikesCount());
         comment.setRepliesCount(commentDTO.getRepliesCount());
         return comment;
-    }
-
-    private Long fetchUserIdByUsername(String username) {
-        return webClientBuilder.build()
-                .get()
-                .uri("http://user-service/api/v1/users/username/" + username)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
-                    log.error("Client error: {}", clientResponse.statusCode());
-                    throw new RuntimeException("Error with client");
-                })
-                .bodyToMono(Long.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorMap(TimeoutException.class, ex -> {
-                    throw new ServiceUnavailableException("User service unavailable");
-                })
-                .doOnError(ex ->{
-                    log.error("Exception throw: {}", ex.getMessage());
-                })
-                .block();
     }
 }

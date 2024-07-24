@@ -15,6 +15,7 @@
         <module name="api-gateway" />
         <module name="user-service" />
         <module name="eureka-server" />
+        <module name="notification-service" />
         <module name="Core" />
       </profile>
     </annotationProcessing>
@@ -24,6 +25,7 @@
       <module name="config-service" target="17" />
       <module name="Core" target="17" />
       <module name="eureka-server" target="17" />
+      <module name="notification-service" target="17" />
       <module name="security-service" target="17" />
       <module name="user-service" target="17" />
       <module name="video-processing-service" target="17" />
@@ -37,6 +39,7 @@
       <module name="comment-service" options="-parameters" />
       <module name="config-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
       <module name="security-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
       <module name="video-processing-service" options="-parameters" />

@@ -13,5 +13,6 @@ public interface VideoService {
     StreamingResponseBody getM3U8(String videoUUID) throws Exception;
     StreamingResponseBody getTs(String videoUUID, String tsFile) throws Exception;
     void setStateForVideo(String videoUUID,VideoState stateForVideo);
+    boolean isVideoIdExist(Long videoId);
     void delete(Long videoId);
 }

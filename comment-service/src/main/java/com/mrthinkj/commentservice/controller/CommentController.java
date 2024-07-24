@@ -3,6 +3,7 @@ package com.mrthinkj.commentservice.controller;
 import com.mrthinkj.commentservice.payload.CommentDTO;
 import com.mrthinkj.commentservice.payload.CommentUploadDTO;
 import com.mrthinkj.commentservice.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +33,14 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<CommentDTO> createNewComment(@RequestBody CommentUploadDTO commentUploadDTO,
+    public ResponseEntity<CommentDTO> createNewComment(@RequestBody @Valid CommentUploadDTO commentUploadDTO,
                                                        @RequestHeader("username") String username){
         return new ResponseEntity<>(commentService.createNewComment(username, commentUploadDTO), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CommentDTO> updateCommentById(@PathVariable Long id,
-                                                        @RequestBody CommentUploadDTO commentUploadDTO,
+                                                        @RequestBody @Valid CommentUploadDTO commentUploadDTO,
                                                         @RequestHeader("username") String username){
         return ResponseEntity.ok(commentService.updateCommentById(id, username, commentUploadDTO));
     }

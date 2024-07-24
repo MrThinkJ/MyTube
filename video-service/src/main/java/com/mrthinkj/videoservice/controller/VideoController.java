@@ -18,6 +18,10 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RequestMapping("/api/v1/videos")
 public class VideoController {
     VideoService videoService;
+    @GetMapping("/check/{videoId}")
+    public ResponseEntity<Boolean> checkForExistVideoId(@PathVariable Long videoId){
+        return ResponseEntity.ok(videoService.isVideoIdExist(videoId));
+    }
     @PostMapping("/upload")
     public ResponseEntity<VideoDTO> upload(@ModelAttribute @Valid VideoUploadDTO videoUploadDTO) throws Exception {
         VideoDTO videoDTO = videoService.upload(videoUploadDTO);

@@ -144,6 +144,12 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
+    public boolean isVideoIdExist(Long videoId) {
+        Video video = videoRepository.findById(videoId).orElse(null);
+        return video != null;
+    }
+
+    @Override
     public void delete(Long videoId) {
 
     }

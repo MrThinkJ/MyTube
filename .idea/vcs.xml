@@ -7,6 +7,7 @@
     <mapping directory="$PROJECT_DIR$/comment-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/config-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/eureka-server" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/notification-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/security-service" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/user-service" vcs="Git" />
   </component>
