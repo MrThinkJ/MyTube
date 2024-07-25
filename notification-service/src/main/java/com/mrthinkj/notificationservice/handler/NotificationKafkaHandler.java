@@ -17,15 +17,14 @@ import org.springframework.stereotype.Component;
 public class NotificationKafkaHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     NotificationService notificationService;
+
     @KafkaHandler
     public void handle(@Payload String message){
         ObjectMapper mapper = new ObjectMapper();
         try {
             NotificationEvent notificationEvent = mapper.readValue(message, NotificationEvent.class);
-            logger.info("Receive new notification for user with id: {}", notificationEvent.getUserId());
+            logger.info("Receive new notification with id: {}", notificationEvent.getId());
             notificationService.sendNotification(notificationEvent);
-            logger.info("Send notification with id {} to user with id {}",
-                    notificationEvent.getId(), notificationEvent.getUserId());
         } catch (Exception e){
             logger.error("Exception when receive new notification event with exception: {}",
                      e.getMessage());

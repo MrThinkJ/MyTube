@@ -33,8 +33,10 @@ public class VideoProcessResultHandler {
             LOGGER.info("Receive new video processing result event with video UUID: {}", videoUUID);
             LOGGER.info("Update video state");
             videoService.setStateForVideo(videoUUID, videoState);
+            videoService.sendNewVideoNotificationToSubscribers(videoUUID);
         } catch (JsonProcessingException e) {
             LOGGER.error("Error deserializing payload", e);
+            throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

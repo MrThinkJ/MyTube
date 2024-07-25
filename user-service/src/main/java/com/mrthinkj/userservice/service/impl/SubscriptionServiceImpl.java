@@ -90,6 +90,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public List<Long> getAllSubscriberIdsByPublisherId(Long publisherId) {
+        return subscriptionRepository.findAllSubscriberIdsByPublisherId(publisherId);
+    }
+
+    @Override
     public int countByPublisherId(Long publisherId) {
         return subscriptionRepository.countByPublisherId(publisherId);
     }

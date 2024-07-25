@@ -1,5 +1,6 @@
 package com.mrthinkj.videoservice.config;
 
+import com.mrthinkj.core.entity.NotificationEvent;
 import com.mrthinkj.core.entity.VideoEvent;
 import com.mrthinkj.core.exception.NotRetryableException;
 import com.mrthinkj.core.exception.RetryableException;
@@ -98,6 +99,11 @@ public class KafkaConfiguration {
     }
     @Bean
     KafkaTemplate<String, VideoEvent> videoEventKafkaTemplate(){
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaConfigs()));
+    }
+
+    @Bean
+    KafkaTemplate<String, NotificationEvent> notificationEventKafkaTemplate(){
         return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaConfigs()));
     }
 

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class NotificationResponse {
     private Long id;
-    private Long userId;
+    private Long toUserId;
     private String message;
     private NotificationType notificationType;
     private boolean isRead;

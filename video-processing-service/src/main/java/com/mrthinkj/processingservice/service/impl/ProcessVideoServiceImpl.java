@@ -134,4 +134,8 @@ public class ProcessVideoServiceImpl implements ProcessVideoService {
         command.add("index.m3u8");
         return command;
     }
+
+    private void sendNewVideoNotificationToSubscribers(){
+
+    }
 }

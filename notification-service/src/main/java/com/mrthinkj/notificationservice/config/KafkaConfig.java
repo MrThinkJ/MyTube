@@ -1,5 +1,6 @@
 package com.mrthinkj.notificationservice.config;
 
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
@@ -74,5 +76,14 @@ public class KafkaConfig {
         containerFactory.setCommonErrorHandler(errorHandler);
 
         return containerFactory;
+    }
+
+    @Bean
+    public NewTopic notificationEventTopic(){
+        return TopicBuilder.name("notification-events-topic")
+                .replicas(3)
+                .partitions(3)
+                .configs(Map.of("min.insync.replicas", "2"))
+                .build();
     }
 }

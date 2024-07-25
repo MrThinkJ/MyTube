@@ -1,7 +1,6 @@
 package com.mrthinkj.videoservice.service.impl;
 
-import com.mrthinkj.core.entity.VideoEvent;
-import com.mrthinkj.core.entity.VideoState;
+import com.mrthinkj.core.entity.*;
 import com.mrthinkj.videoservice.config.StorageConfiguration;
 import com.mrthinkj.videoservice.config.StreamConfiguration;
 import com.mrthinkj.videoservice.entity.Video;
@@ -34,6 +33,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class VideoServiceImpl implements VideoService {
     KafkaTemplate<String, VideoEvent> kafkaTemplate;
+    KafkaTemplate<String, NotificationEvent> notificationEventKafkaTemplate;
     MinioService minioService;
     StorageConfiguration storageConfiguration;
     StreamConfiguration streamConfiguration;
@@ -141,6 +141,39 @@ public class VideoServiceImpl implements VideoService {
                 ()-> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
         video.setState(stateForVideo);
         videoRepository.save(video);
+    }
+
+    @Override
+    public void sendNewVideoNotificationToSubscribers(String videoUUID) {
+        Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
+                ()-> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
+        NewVideoNotification newVideoNotification = NewVideoNotification.builder()
+                .videoUUID(videoUUID)
+                .videoTitle(video.getTitle())
+                .videoOwnerId(video.getPosterId())
+                .build();
+        String eventId = UUID.randomUUID().toString();
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .id(eventId)
+                .notification(newVideoNotification)
+                .type(NotificationType.NEW_VIDEO)
+                .build();
+
+        ProducerRecord<String, NotificationEvent> record = new ProducerRecord<>(
+                "notification-events-topic", eventId, notificationEvent
+        );
+
+        try{
+            SendResult<String, NotificationEvent> result = notificationEventKafkaTemplate.send(record)
+                    .get();
+            LOGGER.info("Send message successfully to kafka broker");
+            LOGGER.info("Partition: "+result.getRecordMetadata().partition());
+            LOGGER.info("Topic: "+result.getRecordMetadata().topic());
+            LOGGER.info("Offset: "+result.getRecordMetadata().offset());
+            LOGGER.info("VideoUUID: {}", videoUUID);
+        } catch (Exception e){
+            LOGGER.error("Error when send message: {}", e.getMessage());
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     Page<User> findSubscriberByPublisherId(Long publisherId, Pageable pageable);
     @Query(value = "SELECT s.publisher FROM Subscription s where s.subscriber.id = :subscriberId")
     Page<User> findPublisherBySubscriberId(Long publisherId, Pageable pageable);
+    @Query(value = "select s.subscriber.id from Subscription s where s.publisher.id =:publisherId")
+    List<Long> findAllSubscriberIdsByPublisherId(Long publisherId);
     @Query(value = "SELECT COUNT(*) FROM subscription WHERE publisher_id = :publisherId", nativeQuery = true)
     int countByPublisherId(@Param("publisherId") Long publisherId);
     int countBySubscriberId(Long subscriberId);

@@ -39,6 +39,11 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.getAllSubscriberByPublisherId(userId, page, size, sortBy, sortDir));
     }
 
+    @GetMapping("/users/{userId}/subscriberIds")
+    public ResponseEntity<List<Long>> getAllSubscriberIdsByPublisherId(@PathVariable Long userId){
+        return ResponseEntity.ok(subscriptionService.getAllSubscriberIdsByPublisherId(userId));
+    }
+
     @GetMapping("/users/{userId}/subscriptions")
     public ResponseEntity<SubscriptionPageResponse> getAllSubscriptionByUserId(
             @PathVariable Long userId,

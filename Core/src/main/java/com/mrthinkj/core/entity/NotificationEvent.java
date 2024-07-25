@@ -2,6 +2,8 @@ package com.mrthinkj.core.entity;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -9,7 +11,6 @@ import lombok.*;
 @Builder
 public class NotificationEvent {
     private String id;
-    private Long userId;
-    private String message;
+    private Object notification;
     private NotificationType type;
 }

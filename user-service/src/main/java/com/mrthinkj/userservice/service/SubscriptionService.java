@@ -15,6 +15,7 @@ public interface SubscriptionService {
                                                            String sortBy, String sortDir);
     SubscriptionPageResponse getAllPublisherBySubscriberId(Long publisherId, int page, int size,
                                                            String sortBy, String sortDir);
+    List<Long> getAllSubscriberIdsByPublisherId(Long publisherId);
     int countByPublisherId(Long publisherId);
     int countBySubscriberId(Long subscriberId);
     boolean isUserSubscribeTo(Long userId, Long publisherId);
