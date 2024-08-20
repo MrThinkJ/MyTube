@@ -6,6 +6,7 @@ import com.mrthinkj.videoservice.config.StreamConfiguration;
 import com.mrthinkj.videoservice.entity.Video;
 import com.mrthinkj.core.exception.DoesNotExistException;
 import com.mrthinkj.videoservice.exception.VideoStateNotSuccessException;
+import com.mrthinkj.videoservice.payload.PagedVideosResponse;
 import com.mrthinkj.videoservice.payload.VideoDTO;
 import com.mrthinkj.videoservice.payload.VideoUploadDTO;
 import com.mrthinkj.videoservice.repository.VideoRepository;
@@ -16,6 +17,8 @@ import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -28,17 +31,30 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class VideoServiceImpl implements VideoService {
     KafkaTemplate<String, VideoEvent> kafkaTemplate;
-    KafkaTemplate<String, NotificationEvent> notificationEventKafkaTemplate;
     MinioService minioService;
     StorageConfiguration storageConfiguration;
     StreamConfiguration streamConfiguration;
     VideoRepository videoRepository;
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+
+    @Override
+    public PagedVideosResponse getPageOfVideo(int page, int size) {
+        Page<Video> videoPage = videoRepository.findAll(PageRequest.of(page, size));
+        return PagedVideosResponse.builder()
+                .content(videoPage.getContent().stream().map(this::mapToDTO).collect(Collectors.toList()))
+                .page(videoPage.getNumber())
+                .size(videoPage.getSize())
+                .totalPage(videoPage.getTotalPages())
+                .isLastPage(videoPage.isLast())
+                .build();
+    }
+
     @Override
     public VideoDTO upload(VideoUploadDTO videoUploadDTO) throws Exception {
         String eventId = UUID.randomUUID().toString();
@@ -46,8 +62,8 @@ public class VideoServiceImpl implements VideoService {
         String idempotencyKey = UUID.randomUUID().toString();
         MultipartFile videoContent = videoUploadDTO.getVideoContent();
         MultipartFile videoThumbnail = videoUploadDTO.getThumbnail();
-        minioService.putObject(videoContent, videoUUID+"/"+videoUUID+".mp4");
-        minioService.putObject(videoThumbnail, videoUUID+"/"+videoUUID+"."+FileNameUtils.getExtension(videoThumbnail.getOriginalFilename()));
+        minioService.putObject(videoContent, videoUUID + "/" + videoUUID + ".mp4");
+        minioService.putObject(videoThumbnail, videoUUID + "/" + videoUUID + "." + FileNameUtils.getExtension(videoThumbnail.getOriginalFilename()));
 
         // Save Video object to database
         Video video = new Video();
@@ -73,35 +89,30 @@ public class VideoServiceImpl implements VideoService {
         record.headers().add("idempotencyKey", idempotencyKey.getBytes());
         SendResult<String, VideoEvent> result = kafkaTemplate.send(record).get();
         LOGGER.info("Send message successfully to kafka broker");
-        LOGGER.info("Partition: "+result.getRecordMetadata().partition());
-        LOGGER.info("Topic: "+result.getRecordMetadata().topic());
-        LOGGER.info("Offset: "+result.getRecordMetadata().offset());
+        LOGGER.info("Partition: " + result.getRecordMetadata().partition());
+        LOGGER.info("Topic: " + result.getRecordMetadata().topic());
+        LOGGER.info("Offset: " + result.getRecordMetadata().offset());
         LOGGER.info("VideoUUID: {}", videoUUID);
 
         // Return VideoDTO
-        return VideoDTO.builder()
-                .videoUUID(videoUUID)
-                .posterId(videoUploadDTO.getPosterId())
-                .publishDate(LocalDate.now())
-                .title(videoUploadDTO.getTitle())
-                .build();
+        return mapToDTO(video);
     }
 
     @Override
     @Transactional(readOnly = true)
     public StreamingResponseBody getM3U8(String videoUUID) throws Exception {
         Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
-                ()-> new DoesNotExistException("This video UUID does not exist"));
+                () -> new DoesNotExistException("This video UUID does not exist"));
         if (video.getState() != VideoState.SUCCESS)
             throw new VideoStateNotSuccessException("This video is processing or process failed");
 
-        InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStream(), videoUUID+"/index.m3u8");
+        InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStream(), videoUUID + "/index.m3u8");
         return outputStream -> {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream)); outputStream) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.endsWith(".ts")) {
-                        outputStream.write((streamConfiguration.getStreamPrefix()+videoUUID+"/"+line).getBytes());
+                        outputStream.write((streamConfiguration.getStreamPrefix() + videoUUID + "/" + line).getBytes());
                         outputStream.write(System.lineSeparator().getBytes());
                     }
                 }
@@ -115,11 +126,11 @@ public class VideoServiceImpl implements VideoService {
     @Transactional(readOnly = true)
     public StreamingResponseBody getTs(String videoUUID, String tsFile) {
         Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
-                ()-> new DoesNotExistException("This video UUID does not exist"));
+                () -> new DoesNotExistException("This video UUID does not exist"));
         if (video.getState() != VideoState.SUCCESS)
             throw new VideoStateNotSuccessException("This video is processing or process failed");
 
-        String tsFilePath = videoUUID+"/"+tsFile+".ts";
+        String tsFilePath = videoUUID + "/" + tsFile + ".ts";
         LOGGER.info(tsFilePath);
         return outputStream -> {
             try (InputStream inputStream = minioService.getObject(storageConfiguration.getBucketStream(), tsFilePath); outputStream) {
@@ -138,42 +149,9 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public void setStateForVideo(String videoUUID, VideoState stateForVideo) {
         Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
-                ()-> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
+                () -> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
         video.setState(stateForVideo);
         videoRepository.save(video);
-    }
-
-    @Override
-    public void sendNewVideoNotificationToSubscribers(String videoUUID) {
-        Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(
-                ()-> new RuntimeException(String.format("Video with UUID: %s does not exist", videoUUID)));
-        NewVideoNotification newVideoNotification = NewVideoNotification.builder()
-                .videoUUID(videoUUID)
-                .videoTitle(video.getTitle())
-                .videoOwnerId(video.getPosterId())
-                .build();
-        String eventId = UUID.randomUUID().toString();
-        NotificationEvent notificationEvent = NotificationEvent.builder()
-                .id(eventId)
-                .notification(newVideoNotification)
-                .type(NotificationType.NEW_VIDEO)
-                .build();
-
-        ProducerRecord<String, NotificationEvent> record = new ProducerRecord<>(
-                "notification-events-topic", eventId, notificationEvent
-        );
-
-        try{
-            SendResult<String, NotificationEvent> result = notificationEventKafkaTemplate.send(record)
-                    .get();
-            LOGGER.info("Send message successfully to kafka broker");
-            LOGGER.info("Partition: "+result.getRecordMetadata().partition());
-            LOGGER.info("Topic: "+result.getRecordMetadata().topic());
-            LOGGER.info("Offset: "+result.getRecordMetadata().offset());
-            LOGGER.info("VideoUUID: {}", videoUUID);
-        } catch (Exception e){
-            LOGGER.error("Error when send message: {}", e.getMessage());
-        }
     }
 
     @Override
@@ -185,5 +163,15 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public void delete(Long videoId) {
 
+    }
+
+    private VideoDTO mapToDTO(Video video) {
+        return VideoDTO.builder()
+                .id(video.getId())
+                .videoUUID(video.getVideoUUID())
+                .posterId(video.getPosterId())
+                .publishDate(LocalDate.now())
+                .title(video.getTitle())
+                .build();
     }
 }

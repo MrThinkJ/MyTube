@@ -6,14 +6,12 @@ import com.mrthinkj.securityservice.entity.UserRegister;
 import com.mrthinkj.securityservice.entity.UserRegisterResponse;
 import com.mrthinkj.securityservice.exception.AuthenticationException;
 import com.mrthinkj.securityservice.security.JwtProvider;
-import lombok.AllArgsConstructor;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.net.URI;
+import static com.mrthinkj.core.utils.APIUtils.USER_API;
 
 @Service
 public class AuthServiceImpl implements AuthService{
@@ -32,7 +30,7 @@ public class AuthServiceImpl implements AuthService{
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         userRegister.setPassword(encoder.encode(userRegister.getPassword()));
         return webClientBuilder.build().post()
-                .uri("http://user-service/api/v1/users")
+                .uri(USER_API)
                 .bodyValue(userRegister)
                 .retrieve()
                 .bodyToMono(UserRegisterResponse.class)
@@ -51,7 +49,7 @@ public class AuthServiceImpl implements AuthService{
 
     private boolean isValidAccount(UserPayload userPayload){
         return Boolean.TRUE.equals(webClientBuilder.build().post()
-                .uri("http://USER-SERVICE/api/v1/users/checkLogin")
+                .uri(USER_API+"/checkLogin")
                 .bodyValue(userPayload)
                 .retrieve()
                 .bodyToMono(Boolean.class)

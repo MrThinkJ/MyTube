@@ -2,6 +2,7 @@ package com.mrthinkj.videoservice.controller;
 
 import com.mrthinkj.videoservice.entity.TsRequest;
 import com.mrthinkj.videoservice.entity.VideoRequest;
+import com.mrthinkj.videoservice.payload.PagedVideosResponse;
 import com.mrthinkj.videoservice.payload.VideoDTO;
 import com.mrthinkj.videoservice.payload.VideoUploadDTO;
 import com.mrthinkj.videoservice.service.VideoService;
@@ -18,6 +19,13 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RequestMapping("/api/v1/videos")
 public class VideoController {
     VideoService videoService;
+
+    @GetMapping("/sync")
+    public ResponseEntity<PagedVideosResponse> getPagesVideoForSync(@RequestParam(defaultValue = "0") int page,
+                                                                    @RequestParam(defaultValue = "1000") int size){
+        return ResponseEntity.ok(videoService.getPageOfVideo(page, size));
+    }
+
     @GetMapping("/check/{videoId}")
     public ResponseEntity<Boolean> checkForExistVideoId(@PathVariable Long videoId){
         return ResponseEntity.ok(videoService.isVideoIdExist(videoId));

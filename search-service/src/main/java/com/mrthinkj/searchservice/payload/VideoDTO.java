@@ -1,4 +1,4 @@
-package com.mrthinkj.videoservice.payload;
+package com.mrthinkj.searchservice.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

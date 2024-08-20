@@ -11,6 +11,7 @@
         <module name="comment-service" />
         <module name="config-service" />
         <module name="video-service" />
+        <module name="search-service" />
         <module name="security-service" />
         <module name="api-gateway" />
         <module name="user-service" />
@@ -26,6 +27,7 @@
       <module name="Core" target="17" />
       <module name="eureka-server" target="17" />
       <module name="notification-service" target="17" />
+      <module name="search-service" target="17" />
       <module name="security-service" target="17" />
       <module name="user-service" target="17" />
       <module name="video-processing-service" target="17" />
@@ -40,6 +42,7 @@
       <module name="config-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="notification-service" options="-parameters" />
+      <module name="search-service" options="-parameters" />
       <module name="security-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
       <module name="video-processing-service" options="-parameters" />

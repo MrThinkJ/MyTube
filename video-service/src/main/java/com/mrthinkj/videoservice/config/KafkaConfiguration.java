@@ -2,6 +2,7 @@ package com.mrthinkj.videoservice.config;
 
 import com.mrthinkj.core.entity.NotificationEvent;
 import com.mrthinkj.core.entity.VideoEvent;
+import com.mrthinkj.core.entity.VideoUpdateEvent;
 import com.mrthinkj.core.exception.NotRetryableException;
 import com.mrthinkj.core.exception.RetryableException;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -108,8 +109,22 @@ public class KafkaConfiguration {
     }
 
     @Bean
+    KafkaTemplate<String, VideoUpdateEvent> videoUpdateEventKafkaTemplate(){
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaConfigs()));
+    }
+
+    @Bean
     public NewTopic videoEventTopic(){
         return TopicBuilder.name("video-events-topic")
+                .replicas(3)
+                .partitions(3)
+                .configs(Map.of("min.insync.replicas", "2"))
+                .build();
+    }
+
+    @Bean
+    public NewTopic videoIndexEventTopic(){
+        return TopicBuilder.name("video-index-events-topic")
                 .replicas(3)
                 .partitions(3)
                 .configs(Map.of("min.insync.replicas", "2"))

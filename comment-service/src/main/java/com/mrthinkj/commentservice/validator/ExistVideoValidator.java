@@ -13,11 +13,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import static com.mrthinkj.core.utils.APIUtils.VIDEO_API;
+
 public class ExistVideoValidator implements ConstraintValidator<ExistVideo, Long> {
     private final String VIDEO_ID_CACHE_REDIS_PREFIX = "videoId:";
     WebClient.Builder webclientBuilder;
     RedisTemplate<String, Object> redisTemplate;
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     public ExistVideoValidator(WebClient.Builder webclientBuilder, RedisTemplate<String, Object> redisTemplate) {
         this.webclientBuilder = webclientBuilder;
         this.redisTemplate = redisTemplate;
@@ -34,7 +36,7 @@ public class ExistVideoValidator implements ConstraintValidator<ExistVideo, Long
         if (videoIdObj != null)
             return Boolean.TRUE.equals(videoIdObj);
         Boolean isExist = webclientBuilder.build().get()
-                .uri("http://video-service/api/v1/videos/check/"+videoId)
+                .uri(VIDEO_API+"/check/"+videoId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, ex ->{
                     throw new RuntimeException("Error with client");
@@ -45,7 +47,7 @@ public class ExistVideoValidator implements ConstraintValidator<ExistVideo, Long
                     throw new ServiceUnavailableException("Video service is unavailable");
                 })
                 .doOnError(ex ->{
-                    log.error("Exception occurred: {}", ex.getMessage());
+                    LOGGER.error("Exception occurred: {}", ex.getMessage());
                 })
                 .block();
         if (isExist == null)

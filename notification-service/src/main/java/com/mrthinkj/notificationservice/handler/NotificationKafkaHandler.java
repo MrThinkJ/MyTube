@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @KafkaListener(topics = "notification-events-topic")
 public class NotificationKafkaHandler {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     NotificationService notificationService;
 
     @KafkaHandler
@@ -23,10 +23,10 @@ public class NotificationKafkaHandler {
         ObjectMapper mapper = new ObjectMapper();
         try {
             NotificationEvent notificationEvent = mapper.readValue(message, NotificationEvent.class);
-            logger.info("Receive new notification with id: {}", notificationEvent.getId());
+            LOGGER.info("Receive new notification with id: {}", notificationEvent.getId());
             notificationService.sendNotification(notificationEvent);
         } catch (Exception e){
-            logger.error("Exception when receive new notification event with exception: {}",
+            LOGGER.error("Exception when receive new notification event with exception: {}",
                      e.getMessage());
         }
     }

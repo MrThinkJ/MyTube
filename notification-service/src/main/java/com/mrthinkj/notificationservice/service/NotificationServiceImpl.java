@@ -23,12 +23,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import static com.mrthinkj.core.utils.APIUtils.USER_API;
+
 @Service
 @AllArgsConstructor
 public class NotificationServiceImpl implements NotificationService{
     NotificationRepository notificationRepository;
     private final Map<Long, SseEmitter> emitterMap = new HashMap<>();
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     WebClient.Builder webClientBuilder;
     @Override
     public SseEmitter addEmitter(Long userId) {
@@ -50,11 +52,11 @@ public class NotificationServiceImpl implements NotificationService{
     private void sendNewVideoNotification(NewVideoNotification newVideoNotification){
         List<Long> subscriberIds = webClientBuilder.build()
                 .get()
-                .uri(String.format("http://user-service/api/v1/users/%s/subscriberIds",
+                .uri(String.format(USER_API+"/%s/subscriberIds",
                         newVideoNotification.getVideoOwnerId()))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
-                    logger.error("Client error: {}", clientResponse.statusCode());
+                    LOGGER.error("Client error: {}", clientResponse.statusCode());
                     throw new RuntimeException("Error with client");
                 })
                 .bodyToFlux(Long.class)
@@ -63,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService{
                     throw new ServiceUnavailableException("User service unavailable");
                 })
                 .doOnError(ex ->{
-                    logger.error("Exception throw: {}", ex.getMessage());
+                    LOGGER.error("Exception throw: {}", ex.getMessage());
                 })
                 .collectList()
                 .block();
@@ -90,7 +92,7 @@ public class NotificationServiceImpl implements NotificationService{
                             .notificationType(NotificationType.NEW_VIDEO)
                             .build()));
                 } catch (IOException e){
-                    logger.error("Error when send SSE message: {}", e.getMessage());
+                    LOGGER.error("Error when send SSE message: {}", e.getMessage());
                 }
             }
         });

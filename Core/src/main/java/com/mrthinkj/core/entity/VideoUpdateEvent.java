@@ -1,22 +1,20 @@
-package com.mrthinkj.videoservice.payload;
+package com.mrthinkj.core.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VideoDTO {
+public class VideoUpdateEvent {
     private Long id;
     private String videoUUID;
     private String thumbnailUUID;
-    private Long posterId;
     private String title;
     private LocalDate publishDate;
+    private Long posterId;
+    private VideoUpdateOperation videoUpdateOperation;
 }
-

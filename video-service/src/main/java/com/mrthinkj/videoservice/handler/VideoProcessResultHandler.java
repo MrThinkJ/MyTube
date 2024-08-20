@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrthinkj.core.entity.VideoEvent;
 import com.mrthinkj.core.entity.VideoState;
+import com.mrthinkj.videoservice.service.CommunicationService;
 import com.mrthinkj.videoservice.service.VideoService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class VideoProcessResultHandler {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     VideoService videoService;
+    CommunicationService communicationService;
     @KafkaHandler
     @Transactional(rollbackOn = Exception.class)
     public void handleProcessingResult(
@@ -33,7 +35,8 @@ public class VideoProcessResultHandler {
             LOGGER.info("Receive new video processing result event with video UUID: {}", videoUUID);
             LOGGER.info("Update video state");
             videoService.setStateForVideo(videoUUID, videoState);
-            videoService.sendNewVideoNotificationToSubscribers(videoUUID);
+            communicationService.sendNewVideoNotificationToSubscribers(videoUUID);
+            communicationService.sendNewVideoInfoForSearchEngine(videoUUID);
         } catch (JsonProcessingException e) {
             LOGGER.error("Error deserializing payload", e);
             throw new RuntimeException(e);

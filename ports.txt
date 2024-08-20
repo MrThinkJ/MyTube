@@ -1,6 +1,8 @@
 api-gateway=9191
+elastic-search=9200
 config-service=8888
 eureka-server=8761
+search-service=8087
 notification-service=8086
 comment-service=8085
 security-service=8084

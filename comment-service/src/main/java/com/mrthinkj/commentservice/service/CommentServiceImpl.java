@@ -10,18 +10,17 @@ import com.mrthinkj.core.exception.UnauthorizedException;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import static com.mrthinkj.core.utils.APIUtils.USER_API;
 
 @Service
 @AllArgsConstructor
@@ -30,7 +29,7 @@ public class CommentServiceImpl implements CommentService{
     CommentRepository commentRepository;
     WebClient.Builder webClientBuilder;
     CachingService cachingService;
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     @Override
     public CommentDTO getCommentById(Long commentId) {
         return mapToDTO(commentRepository.findById(commentId).orElseThrow(
@@ -89,10 +88,10 @@ public class CommentServiceImpl implements CommentService{
     private Long fetchUserIdFromUserService(String username){
         return webClientBuilder.build()
                 .get()
-                .uri("http://user-service/api/v1/users/username/" + username)
+                .uri(USER_API+"/username/" + username)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
-                    log.error("Client error: {}", clientResponse.statusCode());
+                    LOGGER.error("Client error: {}", clientResponse.statusCode());
                     throw new RuntimeException("Error with client");
                 })
                 .bodyToMono(Long.class)
@@ -101,7 +100,7 @@ public class CommentServiceImpl implements CommentService{
                     throw new ServiceUnavailableException("User service unavailable");
                 })
                 .doOnError(ex ->{
-                    log.error("Exception throw: {}", ex.getMessage());
+                    LOGGER.error("Exception throw: {}", ex.getMessage());
                 })
                 .block();
     }
