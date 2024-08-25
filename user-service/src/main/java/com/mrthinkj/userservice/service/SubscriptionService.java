@@ -9,13 +9,13 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface SubscriptionService {
-    SubscriptionDTO subscribe(Long subscriberId, Long publisherId);
-    void unsubscribe(Long subscriberId, Long publisherId);
-    SubscriptionPageResponse getAllSubscriberByPublisherId(Long publisherId, int page, int size,
+    SubscriptionDTO subscribe(Long targetId, String username);
+    void unsubscribe(Long targetId, String username);
+    SubscriptionPageResponse getAllSubscriberByPublisherId(Long id, int page, int size,
                                                            String sortBy, String sortDir);
     SubscriptionPageResponse getAllPublisherBySubscriberId(Long publisherId, int page, int size,
                                                            String sortBy, String sortDir);
-    List<Long> getAllSubscriberIdsByPublisherId(Long publisherId);
+    List<Long> getAllSubscriberIdsByPublisherId(Long id);
     int countByPublisherId(Long publisherId);
     int countBySubscriberId(Long subscriberId);
     boolean isUserSubscribeTo(Long userId, Long publisherId);

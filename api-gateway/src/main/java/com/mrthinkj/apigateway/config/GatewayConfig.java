@@ -18,7 +18,7 @@ public class GatewayConfig {
     public RouteLocator routes(RouteLocatorBuilder builder){
         return builder.routes()
                 .route("user-service",
-                        predicateSpec -> predicateSpec.path("/api/v1/users/**")
+                        predicateSpec -> predicateSpec.path("/api/v1/users/**", "/api/v1/subscriptions/**")
                         .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
                         .uri("lb://user-service"))
                 .route("security-service",
@@ -29,6 +29,18 @@ public class GatewayConfig {
                         predicateSpec -> predicateSpec.path("/api/v1/videos/**")
                                 .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
                                 .uri("lb://video-service"))
+                .route("comment-service",
+                        predicateSpec -> predicateSpec.path("/api/v1/comments/**")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
+                                .uri("lb://comment-service"))
+                .route("notification-service",
+                        predicateSpec -> predicateSpec.path("/api/v1/notifications/**")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
+                                .uri("lb://notification-service"))
+                .route("search-service",
+                        predicateSpec -> predicateSpec.path("/api/v1/search/**")
+                                .filters(gatewayFilterSpec -> gatewayFilterSpec.filter(authenticationFilter))
+                                .uri("lb://search-service"))
                 .build();
     }
 

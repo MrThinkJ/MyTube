@@ -11,16 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static com.mrthinkj.core.utils.WebUtils.DEFAULT_PAGE_NUM;
+import static com.mrthinkj.core.utils.WebUtils.DEFAULT_PAGE_SIZE;
+
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1/search/videos")
+@RequestMapping("/api/v1/search")
 public class VideoSearchController {
     VideoSearchService videoSearchService;
 
-    @GetMapping
+    @GetMapping("/videos")
     public ResponseEntity<List<VideoDocument>> searchVideo(@RequestParam String keyword,
-                                                           @RequestParam(defaultValue = "0") int page,
-                                                           @RequestParam(defaultValue = "10") int size){
+                                                           @RequestParam(defaultValue = DEFAULT_PAGE_NUM) int page,
+                                                           @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size){
         return ResponseEntity.ok(videoSearchService.searchVideos(keyword, page, size));
     }
 }

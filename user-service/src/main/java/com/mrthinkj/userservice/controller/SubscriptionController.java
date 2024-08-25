@@ -12,30 +12,34 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.mrthinkj.core.utils.WebUtils.*;
+
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/v1/subscriptions")
 @AllArgsConstructor
 public class SubscriptionController {
     SubscriptionService subscriptionService;
-    @PostMapping("subscriptions/subscribe")
-    public ResponseEntity<SubscriptionDTO> subscribe(@RequestBody SubscriptionDTO subscriptionDTO){
+    @PostMapping("/subscribe/{targetId}")
+    public ResponseEntity<SubscriptionDTO> subscribe(@PathVariable Long targetId,
+                                                     @RequestHeader("username") String username){
         return new ResponseEntity<>(subscriptionService.subscribe(
-                subscriptionDTO.getSubscriberId(), subscriptionDTO.getPublisherId()), HttpStatus.CREATED);
+                targetId, username), HttpStatus.CREATED);
     }
 
-    @DeleteMapping("subscriptions/unsubscribe")
-    public ResponseEntity<?> unsubscribe(@RequestBody SubscriptionDTO subscriptionDTO){
-        subscriptionService.unsubscribe(subscriptionDTO.getSubscriberId(), subscriptionDTO.getPublisherId());
+    @DeleteMapping("/unsubscribe/{targetId}")
+    public ResponseEntity<?> unsubscribe(@PathVariable Long targetId,
+                                         @RequestHeader("username") String username){
+        subscriptionService.unsubscribe(targetId, username);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/users/{userId}/subscribers")
     public ResponseEntity<SubscriptionPageResponse> getAllSubscriberByPublisherId(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = DEFAULT_PAGE_NUM) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir){
+            @RequestParam(defaultValue = DEFAULT_SORT_DIR) String sortDir){
         return ResponseEntity.ok(subscriptionService.getAllSubscriberByPublisherId(userId, page, size, sortBy, sortDir));
     }
 
@@ -47,10 +51,10 @@ public class SubscriptionController {
     @GetMapping("/users/{userId}/subscriptions")
     public ResponseEntity<SubscriptionPageResponse> getAllSubscriptionByUserId(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = DEFAULT_PAGE_NUM) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir){
+            @RequestParam(defaultValue = DEFAULT_SORT_DIR) String sortDir){
         return ResponseEntity.ok(subscriptionService.getAllPublisherBySubscriberId(userId, page, size, sortBy, sortDir));
     }
 

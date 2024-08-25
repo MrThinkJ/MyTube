@@ -26,22 +26,13 @@ public class VideoProcessResultHandler {
     @KafkaHandler
     @Transactional(rollbackOn = Exception.class)
     public void handleProcessingResult(
-            @Payload String payload,
+            @Payload VideoState videoState,
             @Header("videoUUID") String videoUUID
     ){
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            VideoState videoState = objectMapper.readValue(payload, VideoState.class);
             LOGGER.info("Receive new video processing result event with video UUID: {}", videoUUID);
             LOGGER.info("Update video state");
             videoService.setStateForVideo(videoUUID, videoState);
             communicationService.sendNewVideoNotificationToSubscribers(videoUUID);
             communicationService.sendNewVideoInfoForSearchEngine(videoUUID);
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Error deserializing payload", e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

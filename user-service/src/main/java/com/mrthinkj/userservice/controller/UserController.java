@@ -1,21 +1,26 @@
 package com.mrthinkj.userservice.controller;
 
-import com.mrthinkj.userservice.payload.UserDTO;
-import com.mrthinkj.userservice.payload.UserPayload;
-import com.mrthinkj.userservice.payload.UserRegisterDTO;
-import com.mrthinkj.userservice.payload.UserResponseDTO;
+import com.mrthinkj.userservice.payload.*;
 import com.mrthinkj.userservice.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.mrthinkj.core.utils.WebUtils.DEFAULT_PAGE_NUM;
+import static com.mrthinkj.core.utils.WebUtils.DEFAULT_PAGE_SIZE;
+
 @RestController
 @RequestMapping("/api/v1/users")
 @AllArgsConstructor
 public class UserController {
     UserService userService;
-
+    @GetMapping
+    public ResponseEntity<PagedUsersResponse> getUsers(@RequestParam(defaultValue = DEFAULT_PAGE_NUM) int page,
+                                                       @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) int size){
+        // TODO: Implement find paged users
+        return null;
+    }
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id){
         return ResponseEntity.ok(userService.getUserById(id));

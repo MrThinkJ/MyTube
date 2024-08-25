@@ -15,10 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
@@ -104,8 +101,13 @@ public class KafkaConfiguration {
     }
 
     @Bean
+    ProducerFactory<String, NotificationEvent> producerFactory(){
+        return new DefaultKafkaProducerFactory<>(kafkaConfigs());
+    }
+
+    @Bean
     KafkaTemplate<String, NotificationEvent> notificationEventKafkaTemplate(){
-        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaConfigs()));
+        return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
@@ -116,26 +118,26 @@ public class KafkaConfiguration {
     @Bean
     public NewTopic videoEventTopic(){
         return TopicBuilder.name("video-events-topic")
-                .replicas(3)
+                .replicas(1)
                 .partitions(3)
-                .configs(Map.of("min.insync.replicas", "2"))
+                .configs(Map.of("min.insync.replicas", "1"))
                 .build();
     }
 
     @Bean
     public NewTopic videoIndexEventTopic(){
         return TopicBuilder.name("video-index-events-topic")
-                .replicas(3)
+                .replicas(1)
                 .partitions(3)
-                .configs(Map.of("min.insync.replicas", "2"))
+                .configs(Map.of("min.insync.replicas", "1"))
                 .build();
     }
 
     @Bean NewTopic videoResultEventTopic(){
         return TopicBuilder.name("video-result-events-topic")
-                .replicas(3)
+                .replicas(1)
                 .partitions(3)
-                .configs(Map.of("min.insync.replicas", "2"))
+                .configs(Map.of("min.insync.replicas", "1"))
                 .build();
     }
 }

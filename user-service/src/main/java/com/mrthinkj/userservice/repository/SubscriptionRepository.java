@@ -17,10 +17,16 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     Optional<Subscription> findByPublisherIdAndSubscriberId(Long subscriberId, Long publisherId);
     @Query(value = "SELECT s.subscriber FROM Subscription s where s.publisher.id = :publisherId")
     Page<User> findSubscriberByPublisherId(Long publisherId, Pageable pageable);
+    @Query(value = "SELECT s.subscriber FROM Subscription s where s.publisher.username = :username")
+    Page<User> findSubscriberByPublisherUsername(String username, Pageable pageable);
     @Query(value = "SELECT s.publisher FROM Subscription s where s.subscriber.id = :subscriberId")
-    Page<User> findPublisherBySubscriberId(Long publisherId, Pageable pageable);
+    Page<User> findPublisherBySubscriberId(Long subscriberId, Pageable pageable);
+    @Query(value = "SELECT s.publisher FROM Subscription s where s.subscriber.username = :username")
+    Page<User> findPublisherBySubscriberUsername(String username, Pageable pageable);
     @Query(value = "select s.subscriber.id from Subscription s where s.publisher.id =:publisherId")
     List<Long> findAllSubscriberIdsByPublisherId(Long publisherId);
+    @Query(value = "select s.subscriber.id from Subscription s where s.publisher.username =:username")
+    List<Long> findAllSubscriberIdsByPublisherUsername(String username);
     @Query(value = "SELECT COUNT(*) FROM subscription WHERE publisher_id = :publisherId", nativeQuery = true)
     int countByPublisherId(@Param("publisherId") Long publisherId);
     int countBySubscriberId(Long subscriberId);

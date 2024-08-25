@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,39 +28,43 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     UserRepository userRepository;
 
     @Override
-    public SubscriptionDTO subscribe(Long subscriberId, Long publisherId) {
-        User subscriber = userRepository.findById(subscriberId).orElseThrow(
-                ()-> new ResourceNotFoundException("User", "Id", subscriberId.toString())
+    public SubscriptionDTO subscribe(Long targetId, String username) {
+        User target = userRepository.findById(targetId).orElseThrow(
+                ()-> new ResourceNotFoundException("User", "Id", targetId.toString())
         );
-        User publisher = userRepository.findById(publisherId).orElseThrow(
-                ()-> new ResourceNotFoundException("User", "Id", publisherId.toString())
+        User user = userRepository.findByUsernameOrEmail(username, username).orElseThrow(
+                ()-> new ResourceNotFoundException("User", "Id", username)
         );
         Subscription subscription = new Subscription();
-        subscription.setSubscriber(subscriber);
-        subscription.setPublisher(publisher);
+        subscription.setSubscriber(user);
+        subscription.setPublisher(target);
         subscriptionRepository.save(subscription);
         return SubscriptionDTO.builder()
-                .subscriberId(subscriberId)
-                .publisherId(publisherId)
+                .subscriberId(user.getId())
+                .publisherId(targetId)
                 .build();
     }
 
     @Override
     @Transactional
-    public void unsubscribe(Long subscriberId, Long publisherId) {
-        Subscription subscription = subscriptionRepository.findByPublisherIdAndSubscriberId(publisherId, subscriberId)
+    public void unsubscribe(Long targetId, String username) {
+        // TODO: Implement caching
+        User user = userRepository.findByUsernameOrEmail(username, username).orElseThrow(
+                ()-> new ResourceNotFoundException("User", "Id", username)
+        );
+        Subscription subscription = subscriptionRepository.findByPublisherIdAndSubscriberId(targetId, user.getId())
                 .orElseThrow(()-> new RuntimeException(
-                        String.format("User with id %s does not subscribe to user with id %s", subscriberId, publisherId)));
+                        String.format("User with id %s does not subscribe to user with id %s", targetId, user.getId())));
         subscriptionRepository.delete(subscription);
     }
 
     @Override
-    public SubscriptionPageResponse getAllSubscriberByPublisherId(Long publisherId, int page, int size,
+    public SubscriptionPageResponse getAllSubscriberByPublisherId(Long id, int page, int size,
                                                                   String sortBy, String sortDir) {
         Sort sort = Sort.by(sortDir.equalsIgnoreCase(
                 Sort.Direction.ASC.name()) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page <User> usersPage = subscriptionRepository.findSubscriberByPublisherId(publisherId, pageable);
+        Page <User> usersPage = subscriptionRepository.findSubscriberByPublisherId(id, pageable);
         List<User> users = usersPage.getContent();
         return SubscriptionPageResponse.builder()
                 .userResponseDTOS(users.stream().map(this::mapToResponseDTO).collect(Collectors.toList()))
@@ -90,8 +95,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public List<Long> getAllSubscriberIdsByPublisherId(Long publisherId) {
-        return subscriptionRepository.findAllSubscriberIdsByPublisherId(publisherId);
+    public List<Long> getAllSubscriberIdsByPublisherId(Long id) {
+        return subscriptionRepository.findAllSubscriberIdsByPublisherId(id);
     }
 
     @Override

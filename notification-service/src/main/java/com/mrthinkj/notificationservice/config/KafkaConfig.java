@@ -1,5 +1,8 @@
 package com.mrthinkj.notificationservice.config;
 
+import com.mrthinkj.core.entity.NotificationEvent;
+import com.mrthinkj.core.exception.NotRetryableException;
+import com.mrthinkj.core.exception.RetryableException;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -13,6 +16,7 @@ import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
@@ -33,17 +37,39 @@ public class KafkaConfig {
     private String trustedPackage;
 
     @Bean
-    ConsumerFactory<String, Object> consumerFactory(){
+    Map<String, Object> consumerConfigs(){
         Map<String, Object> configs = new HashMap<>();
         configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         configs.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         configs.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configs.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, isolationLevel);
         configs.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackage);
+        configs.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, isolationLevel);
+        return configs;
+    }
 
-        return new DefaultKafkaConsumerFactory<>(configs);
+    @Bean
+    ConsumerFactory<String, Object> consumerFactory(){
+        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+    }
+
+    @Bean
+    ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory,
+            KafkaTemplate<String, Object> kafkaTemplate
+    ){
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+                new DeadLetterPublishingRecoverer(kafkaTemplate),
+                new FixedBackOff(5000, 3)
+        );
+        errorHandler.addNotRetryableExceptions(NotRetryableException.class);
+        errorHandler.addRetryableExceptions(RetryableException.class);
+
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(errorHandler);
+        return factory;
     }
 
     @Bean
@@ -57,33 +83,16 @@ public class KafkaConfig {
     }
 
     @Bean
-    KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory){
-        return new KafkaTemplate<>(producerFactory);
-    }
-
-    @Bean
-    ConcurrentKafkaListenerContainerFactory<String, Object> concurrentKafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> consumerFactory,
-            KafkaTemplate<String, Object> kafkaTemplate
-    ){
-        ConcurrentKafkaListenerContainerFactory<String, Object> containerFactory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        containerFactory.setConsumerFactory(consumerFactory);
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-                new DeadLetterPublishingRecoverer(kafkaTemplate),
-                new FixedBackOff(1000, 5)
-        );
-        containerFactory.setCommonErrorHandler(errorHandler);
-
-        return containerFactory;
+    KafkaTemplate<String, Object> kafkaTemplate(){
+        return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
     public NewTopic notificationEventTopic(){
         return TopicBuilder.name("notification-events-topic")
-                .replicas(3)
+                .replicas(1)
                 .partitions(3)
-                .configs(Map.of("min.insync.replicas", "2"))
+                .configs(Map.of("min.insync.replicas", "1"))
                 .build();
     }
 }

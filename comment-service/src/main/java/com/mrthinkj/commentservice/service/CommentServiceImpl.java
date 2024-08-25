@@ -76,7 +76,7 @@ public class CommentServiceImpl implements CommentService{
 
     private Long fetchUserIdByUsername(String username) {
         String USERID_REDIS_PREFIX = "userId:";
-        String cacheKey = USERID_REDIS_PREFIX +username;
+        String cacheKey = USERID_REDIS_PREFIX + username;
         Object userIdObj = cachingService.getObjectFromKey(cacheKey);
         if (userIdObj != null)
             return (Long) userIdObj;

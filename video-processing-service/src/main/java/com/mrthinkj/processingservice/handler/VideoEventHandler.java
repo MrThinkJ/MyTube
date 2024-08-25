@@ -20,26 +20,23 @@ import org.springframework.stereotype.Component;
 public class VideoEventHandler {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     ProcessVideoService processVideoService;
+
     @KafkaHandler
     @Transactional(rollbackOn = Exception.class)
     public void handle(
-            @Payload String payload,
+            @Payload VideoEvent videoEvent,
             @Header("idempotencyKey") String idempotencyKey
-            ){
-        ObjectMapper objectMapper = new ObjectMapper();
+    ) {
         try {
-            VideoEvent videoEvent = objectMapper.readValue(payload, VideoEvent.class);
             LOGGER.info("Receive new video event with video UUID: {}", videoEvent.getVideoId());
-            if (processVideoService.checkIfExistIdempotencyKey(idempotencyKey)){
+            if (processVideoService.checkIfExistIdempotencyKey(idempotencyKey)) {
                 LOGGER.info("Found duplicate idempotency key: {}", idempotencyKey);
                 return;
             }
             LOGGER.info("Process video");
             processVideoService.processVideo(videoEvent.getVideoId());
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Error deserializing payload", e);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+                LOGGER.error("Error when processing video: {}", e.getMessage());
         }
     }
 }

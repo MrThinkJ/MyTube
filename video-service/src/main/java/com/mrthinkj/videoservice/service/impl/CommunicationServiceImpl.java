@@ -21,6 +21,7 @@ public class CommunicationServiceImpl implements CommunicationService {
     KafkaTemplate<String, NotificationEvent> notificationEventKafkaTemplate;
     KafkaTemplate<String, VideoUpdateEvent> videoUpdateEventKafkaTemplate;
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+
     @Override
     public void sendNewVideoNotificationToSubscribers(String videoUUID) {
         Video video = videoRepository.findByVideoUUID(videoUUID).orElseThrow(

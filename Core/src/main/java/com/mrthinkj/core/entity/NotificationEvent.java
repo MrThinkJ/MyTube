@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 public class NotificationEvent {
     private String id;
-    private Object notification;
+    private NewVideoNotification notification;
     private NotificationType type;
 }
