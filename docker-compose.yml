@@ -13,8 +13,8 @@ services:
     volumes:
       - ./minio/data:/data
     command: server --console-address ':9001' /data
-#    networks:
-#      - shared_net:
+    networks:
+      - shared_net:
 #
 #  video-db:
 #    image: postgres
